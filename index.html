@@ -190,6 +190,79 @@
             font-weight: bold;
             color: #4CAF50;
         }
+
+        /* Sound Button */
+        .sound-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Footer Styles */
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #4a5568;
+            font-size: 0.9rem;
+            padding: 25px 0;
+            background-color: #f5f5f5;
+            border-top: 2px solid #e2e8f0;
+            position: relative;
+            width: 100%;
+        }
+        
+        footer::before {
+            content: "🎬";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f5f5f5;
+            padding: 0 15px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .footer-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: #4a5568;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-link:hover {
+            color: #4CAF50;
+            text-decoration: underline;
+        }
         
         /* Animations */
         @keyframes fadeIn {
@@ -216,7 +289,7 @@
 
     <div class="game-container">
         <h1>Emoji Riddle Challenge</h1>
-        <p>Guess what these emoji sequences represent!</p>
+        <p>Guess which movies these emoji sequences represent!</p>
         
         <div class="level-info">Level <span id="level-number">1</span> of 5</div>
         
@@ -255,9 +328,25 @@
     </div>
 
     <!-- Audio Elements -->
-<audio id="dingSound" src="https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-77338/zapsplat_cartoon_bell_ding_001_77338.mp3"></audio>
-<audio id="buzzerSound" src="https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-77338/zapsplat_cartoon_buzzer_001_77338.mp3"></audio>
-<audio id="fanfareSound" src="https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-77338/zapsplat_cartoon_fanfare_001_77338.mp3"></audio>
+    <audio id="correct-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+    <audio id="wrong-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+    <audio id="victory-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
+
+    <!-- Sound Enable Button -->
+    <button class="sound-button" id="enable-sound">🔊 Enable Sound</button>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-text">
+                🍿 Emoji Riddle Challenge 🍿
+            </div>
+            <div class="footer-links">
+                <a href="https://x.com/heyshrutimishra" class="footer-link" target="_blank">@heyshrutimishra</a>
+                <a href="https://deepseek.com/" class="footer-link" target="_blank">DeepSeek V3</a>
+            </div>
+        </div>
+    </footer>
 
     <script>
         // Game Data
@@ -286,6 +375,7 @@
         const victoryBadge = document.getElementById('victory-badge');
         const shareBtn = document.getElementById('share-btn');
         const leaderboardBody = document.getElementById('leaderboard-body');
+        const enableSoundBtn = document.getElementById('enable-sound');
         
         // Audio Elements
         const correctSound = document.getElementById('correct-sound');
@@ -295,7 +385,8 @@
         // Game State
         let currentLevel = 0;
         let maxLevel = riddles.length;
-        const playerName = "You"; // Default player name
+        const playerName = "You";
+        let audioEnabled = false;
         
         // Initialize the game
         function initGame() {
@@ -325,6 +416,19 @@
             }, delay);
         }
         
+        // Play sound with error handling
+        function playSound(audioElement) {
+            if (!audioEnabled) return;
+            
+            audioElement.currentTime = 0;
+            audioElement.play().catch(e => {
+                console.log("Audio playback failed:", e);
+                audioEnabled = false;
+                enableSoundBtn.textContent = "🔇 Sound Error";
+                enableSoundBtn.style.background = "#e53e3e";
+            });
+        }
+        
         // Check the player's answer
         function checkAnswer() {
             const playerAnswer = guessInput.value.trim().toLowerCase();
@@ -333,9 +437,8 @@
             if (playerAnswer === correctAnswer) {
                 message.className = 'message success';
                 typewriter("Correct! Level Up! 🚀", message, 100);
-                correctSound.play();
+                playSound(correctSound);
                 
-                // Move to next level after a delay
                 setTimeout(() => {
                     currentLevel++;
                     
@@ -348,7 +451,7 @@
             } else {
                 message.className = 'message error';
                 message.textContent = "Not quite right. Try again!";
-                wrongSound.play();
+                playSound(wrongSound);
                 guessInput.focus();
             }
         }
@@ -357,7 +460,7 @@
         function showVictory() {
             document.querySelector('.game-container').style.paddingBottom = '40px';
             victorySection.style.display = 'block';
-            victorySound.play();
+            playSound(victorySound);
             
             // Update victory badge with actual score
             victoryBadge.textContent = `🏆 I scored ${maxLevel}/${maxLevel} in the Emoji Riddle Challenge! Can you beat me? #EmojiRiddleChallenge 🧩`;
@@ -401,6 +504,22 @@
                 leaderboardBody.appendChild(row);
             });
         }
+        
+        // Enable sound button
+        enableSoundBtn.addEventListener('click', () => {
+            // Play and immediately pause to unlock audio
+            correctSound.play().then(() => {
+                correctSound.pause();
+                correctSound.currentTime = 0;
+                audioEnabled = true;
+                enableSoundBtn.textContent = "🔊 Sound On";
+                enableSoundBtn.style.background = "#4CAF50";
+            }).catch(e => {
+                console.log("Audio playback failed:", e);
+                enableSoundBtn.textContent = "🔇 Sound Blocked";
+                enableSoundBtn.style.background = "#e53e3e";
+            });
+        });
         
         // Event Listeners
         submitBtn.addEventListener('click', checkAnswer);
