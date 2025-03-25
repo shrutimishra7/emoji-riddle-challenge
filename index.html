@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Riddle Challenge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* Game Container */
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+        
+        .level-info {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #4a5568;
+        }
+        
+        /* Emoji Display */
+        .emoji-display {
+            font-size: 4rem;
+            margin: 30px 0;
+            min-height: 80px;
+        }
+        
+        /* Input Area */
+        .input-area {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        input[type="text"] {
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background-color: #3e8e41;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* Messages */
+        .message {
+            margin: 20px 0;
+            min-height: 30px;
+            font-weight: 600;
+        }
+        
+        .success {
+            color: #4CAF50;
+        }
+        
+        .error {
+            color: #e53e3e;
+        }
+        
+        /* Victory Section */
+        .victory-section {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 1s;
+        }
+        
+        .victory-badge {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px dashed #4CAF50;
+            font-size: 1.1rem;
+        }
+        
+        .share-button {
+            background-color: #1DA1F2;
+            margin-top: 15px;
+        }
+        
+        .share-button:hover {
+            background-color: #1991db;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .flash {
+            animation: flash 0.5s 3;
+        }
+        
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Emoji Riddle Challenge</h1>
+        <p>Guess what these emoji sequences represent!</p>
+        
+        <div class="level-info">Level <span id="level-number">1</span> of 5</div>
+        
+        <div class="emoji-display" id="emoji-display">🦁👑</div>
+        
+        <div class="input-area">
+            <input type="text" id="guess-input" placeholder="Your answer...">
+            <button id="submit-btn">Submit</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="victory-section" id="victory-section">
+            <h2 class="flash">You Win! 🎉</h2>
+            <div class="victory-badge" id="victory-badge">
+                🏆 I scored 5/5 in the Emoji Riddle Challenge! Can you beat me? #EmojiRiddleChallenge 🧩
+            </div>
+            <button class="share-button" id="share-btn">Share on X</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Data
+        const riddles = [
+            { emoji: "🦁👑", answer: "the lion king" },
+            { emoji: "🌍🦒", answer: "madagascar" },
+            { emoji: "❄️👑", answer: "frozen" },
+            { emoji: "🦁🌍", answer: "hakuna matata" },
+            { emoji: "🧜‍♀️🌊", answer: "the little mermaid" }
+        ];
+        
+        // DOM Elements
+        const emojiDisplay = document.getElementById('emoji-display');
+        const levelNumber = document.getElementById('level-number');
+        const guessInput = document.getElementById('guess-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const message = document.getElementById('message');
+        const victorySection = document.getElementById('victory-section');
+        const victoryBadge = document.getElementById('victory-badge');
+        const shareBtn = document.getElementById('share-btn');
+        
+        // Game State
+        let currentLevel = 0;
+        let maxLevel = riddles.length;
+        
+        // Initialize the game
+        function initGame() {
+            updateLevelDisplay();
+            guessInput.focus();
+        }
+        
+        // Update the level display
+        function updateLevelDisplay() {
+            emojiDisplay.textContent = riddles[currentLevel].emoji;
+            levelNumber.textContent = currentLevel + 1;
+            guessInput.value = '';
+            message.textContent = '';
+        }
+        
+        // Typewriter effect for messages
+        function typewriter(text, element, delay = 100) {
+            let i = 0;
+            element.textContent = '';
+            const timer = setInterval(() => {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(timer);
+                }
+            }, delay);
+        }
+        
+        // Check the player's answer
+        function checkAnswer() {
+            const playerAnswer = guessInput.value.trim().toLowerCase();
+            const correctAnswer = riddles[currentLevel].answer;
+            
+            if (playerAnswer === correctAnswer) {
+                message.className = 'message success';
+                typewriter("Correct! Level Up! 🚀", message, 100);
+                
+                // Move to next level after a delay
+                setTimeout(() => {
+                    currentLevel++;
+                    
+                    if (currentLevel < maxLevel) {
+                        updateLevelDisplay();
+                    } else {
+                        showVictory();
+                    }
+                }, 1500);
+            } else {
+                message.className = 'message error';
+                message.textContent = "Not quite right. Try again!";
+                guessInput.focus();
+            }
+        }
+        
+        // Show victory screen
+        function showVictory() {
+            document.querySelector('.game-container').style.paddingBottom = '40px';
+            victorySection.style.display = 'block';
+            
+            // Set up share button
+            shareBtn.addEventListener('click', () => {
+                const tweetText = encodeURIComponent(victoryBadge.textContent + " [website link]");
+                window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+            });
+        }
+        
+        // Event Listeners
+        submitBtn.addEventListener('click', checkAnswer);
+        guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
