@@ -23,7 +23,22 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            background-image: url('https://www.transparenttextures.com/patterns/light-paper-fibers.png');
+            position: relative;
         }
+        
+        /* Decorative Emojis */
+        .decor-emoji {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.7;
+            z-index: -1;
+        }
+        
+        .emoji-1 { top: 20px; left: 20px; }
+        .emoji-2 { top: 20px; right: 20px; }
+        .emoji-3 { bottom: 20px; left: 20px; }
+        .emoji-4 { bottom: 20px; right: 20px; }
         
         /* Game Container */
         .game-container {
@@ -35,6 +50,9 @@
             max-width: 600px;
             text-align: center;
             margin-top: 30px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
         }
         
         h1 {
@@ -90,6 +108,10 @@
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         
         button:hover {
@@ -135,10 +157,38 @@
         .share-button {
             background-color: #1DA1F2;
             margin-top: 15px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
         }
         
-        .share-button:hover {
-            background-color: #1991db;
+        /* Leaderboard */
+        .leaderboard {
+            width: 100%;
+            margin: 25px 0;
+            border-collapse: collapse;
+            animation: fadeIn 1s;
+        }
+        
+        .leaderboard th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .leaderboard td {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .leaderboard tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        
+        .leaderboard .player-rank {
+            font-weight: bold;
+            color: #4CAF50;
         }
         
         /* Animations */
@@ -158,6 +208,12 @@
     </style>
 </head>
 <body>
+    <!-- Decorative Emojis -->
+    <div class="decor-emoji emoji-1">🎉</div>
+    <div class="decor-emoji emoji-2">🧩</div>
+    <div class="decor-emoji emoji-3">🧩</div>
+    <div class="decor-emoji emoji-4">🎉</div>
+
     <div class="game-container">
         <h1>Emoji Riddle Challenge</h1>
         <p>Guess what these emoji sequences represent!</p>
@@ -178,9 +234,30 @@
             <div class="victory-badge" id="victory-badge">
                 🏆 I scored 5/5 in the Emoji Riddle Challenge! Can you beat me? #EmojiRiddleChallenge 🧩
             </div>
-            <button class="share-button" id="share-btn">Share on X</button>
+            <button class="share-button" id="share-btn">🐦 Share on X</button>
+            
+            <div id="leaderboard-container">
+                <h3>Leaderboard</h3>
+                <table class="leaderboard" id="leaderboard">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <!-- Leaderboard entries will be added here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    <!-- Audio Elements -->
+    <audio id="correct-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+    <audio id="wrong-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+    <audio id="victory-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
 
     <script>
         // Game Data
@@ -192,6 +269,13 @@
             { emoji: "🧜‍♀️🌊", answer: "the little mermaid" }
         ];
         
+        // Fake leaderboard data
+        const leaderboardData = [
+            { name: "Alice", score: 5 },
+            { name: "Bob", score: 4 },
+            { name: "Charlie", score: 3 }
+        ];
+        
         // DOM Elements
         const emojiDisplay = document.getElementById('emoji-display');
         const levelNumber = document.getElementById('level-number');
@@ -201,10 +285,17 @@
         const victorySection = document.getElementById('victory-section');
         const victoryBadge = document.getElementById('victory-badge');
         const shareBtn = document.getElementById('share-btn');
+        const leaderboardBody = document.getElementById('leaderboard-body');
+        
+        // Audio Elements
+        const correctSound = document.getElementById('correct-sound');
+        const wrongSound = document.getElementById('wrong-sound');
+        const victorySound = document.getElementById('victory-sound');
         
         // Game State
         let currentLevel = 0;
         let maxLevel = riddles.length;
+        const playerName = "You"; // Default player name
         
         // Initialize the game
         function initGame() {
@@ -242,6 +333,7 @@
             if (playerAnswer === correctAnswer) {
                 message.className = 'message success';
                 typewriter("Correct! Level Up! 🚀", message, 100);
+                correctSound.play();
                 
                 // Move to next level after a delay
                 setTimeout(() => {
@@ -256,6 +348,7 @@
             } else {
                 message.className = 'message error';
                 message.textContent = "Not quite right. Try again!";
+                wrongSound.play();
                 guessInput.focus();
             }
         }
@@ -264,11 +357,48 @@
         function showVictory() {
             document.querySelector('.game-container').style.paddingBottom = '40px';
             victorySection.style.display = 'block';
+            victorySound.play();
+            
+            // Update victory badge with actual score
+            victoryBadge.textContent = `🏆 I scored ${maxLevel}/${maxLevel} in the Emoji Riddle Challenge! Can you beat me? #EmojiRiddleChallenge 🧩`;
+            
+            // Generate leaderboard
+            generateLeaderboard();
             
             // Set up share button
             shareBtn.addEventListener('click', () => {
-                const tweetText = encodeURIComponent(victoryBadge.textContent + "  https://shrutimishra7.github.io/emoji-riddle-challenge/`");
+                const tweetText = encodeURIComponent(victoryBadge.textContent + " [website link]");
                 window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+            });
+        }
+        
+        // Generate the leaderboard with player's rank
+        function generateLeaderboard() {
+            // Clear existing leaderboard
+            leaderboardBody.innerHTML = '';
+            
+            // Add player's score to the leaderboard data
+            const allScores = [...leaderboardData, { name: playerName, score: maxLevel }];
+            
+            // Sort by score (descending)
+            allScores.sort((a, b) => b.score - a.score);
+            
+            // Add rows to the leaderboard
+            allScores.forEach((player, index) => {
+                const row = document.createElement('tr');
+                
+                // Highlight player's row
+                if (player.name === playerName) {
+                    row.classList.add('player-rank');
+                }
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${player.name}</td>
+                    <td>${player.score}/${maxLevel}</td>
+                `;
+                
+                leaderboardBody.appendChild(row);
             });
         }
         
